@@ -110,41 +110,6 @@ outputs/20251128_120000/
 └── cardiomyocyte_classifier_id_class_dict.pkl
 ```
 
-## Project Structure
-
-```
-Geneformer_finetuning/
-├── src/
-│   ├── main.py                    # Main training script
-│   ├── data/
-│   │   └── dataset_loader.py      # Data loading utilities
-│   ├── models/
-│   │   ├── classifier.py          # Model initialization
-│   │   └── model_patch.py         # V1 model loading patch
-│   ├── training/
-│   │   └── trainer.py             # Training pipeline
-│   └── evaluation/
-│       └── evaluator.py           # Evaluation & visualization
-├── configs/
-│   └── config.yaml                # Training configuration
-├── notebooks/
-│   └── demo.ipynb                 # Example notebook
-└── requirements.txt
-```
-
-## Configuration
-
-Key parameters in `configs/config.yaml`:
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `model.version` | `V1` | Geneformer version (V1: 10M params) |
-| `data.max_cells` | `50000` | Maximum cells for training |
-| `training.num_epochs` | `3` | Training epochs |
-| `training.batch_size` | `16` | Per-device batch size |
-| `training.learning_rate` | `5e-5` | Learning rate |
-| `training.bf16` | `true` | Use BF16 precision (GPU) |
-
 ## Model Details
 
 - **Base Model:** [Geneformer V1-10M](https://huggingface.co/ctheodoris/Geneformer)
@@ -170,15 +135,6 @@ Key parameters in `configs/config.yaml`:
 ✅ **Verified** - Tested against working Colab notebook  
 ✅ **Documentation** - Complete guides and examples
 
-## GPU & Compute Options
-
-This code works on:
-- **Local GPU** (NVIDIA with CUDA)
-- **Institution/Lab GPU** servers
-- **Cloud platforms** (AWS, Azure, GCP)
-- **Google Colab** (if you need free GPU access)
-- **CPU** (slower but functional)
-
 ### Google Colab Setup
 
 If you don't have a GPU, use Google Colab:
@@ -200,10 +156,6 @@ training:
   batch_size: 8
   gradient_accumulation_steps: 2
 ```
-
-### CUDA Not Available
-
-Code automatically uses CPU if no GPU found (slower but works).
 
 ### Data Loading Issues
 
@@ -233,20 +185,4 @@ If you use Geneformer in your research, please cite:
 }
 ```
 
-## Related Work
 
-- **Geneformer Paper:** [Transfer learning enables predictions in network biology](https://www.nature.com/articles/s41586-023-06139-9)
-- **Model on HuggingFace:** [ctheodoris/Geneformer](https://huggingface.co/ctheodoris/Geneformer)
-- **Dataset:** [Genecorpus-30M](https://huggingface.co/datasets/ctheodoris/Genecorpus-30M)
-
-## License
-
-MIT License - See LICENSE file for details.
-
-## Contributing
-
-Issues and pull requests are welcome! See [DATA_GUIDE.md](DATA_GUIDE.md) for information on using custom datasets.
-
----
-
-**Note:** This repository contains only code. The dataset must be downloaded separately from HuggingFace (see Dataset section above).
