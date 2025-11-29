@@ -1,0 +1,67 @@
+# Geneformer Fine-tuning Configuration
+
+# Model settings
+model:
+  name: "ctheodoris/Geneformer"
+  version: "V1"  # V1 (10M) or V2 (104M/316M)
+  freeze_layers: 0  # Number of layers to freeze (0 = train all)
+
+# Data settings
+data:
+  dataset_file: "cell_type_train_data.dataset"  # Path to downloaded dataset
+  cell_state_key: "cell_type"                    # Column name for labels
+  cell_types:                                    # Cardiomyopathy classifications
+    - "Non-Failing"              # NF - Healthy
+    - "Hypertrophic Cardiomyopathy"  # HCM
+    - "Dilated Cardiomyopathy"       # DCM
+  max_cells: 50000               # Max number of cells to use
+  train_test_split: 0.2          # Test set proportion
+
+# Training hyperparameters
+training:
+  num_epochs: 3
+  learning_rate: 5e-5
+  batch_size: 16                  # Per device batch size
+  gradient_accumulation_steps: 1
+  warmup_steps: 500
+  weight_decay: 0.001
+  
+  # Optimization
+  optimizer: "adamw"
+  lr_scheduler: "linear"
+  max_grad_norm: 1.0
+  
+  # Mixed precision
+  fp16: false
+  bf16: true                      # Better for A100/T4 GPUs
+  tf32: true                      # Enable TF32 on Ampere GPUs
+
+# Evaluation
+evaluation:
+  strategy: "steps"
+  eval_steps: 1000
+  save_strategy: "steps"
+  save_steps: 1000
+  save_total_limit: 3
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_loss"
+
+# Logging
+logging:
+  steps: 500
+  wandb_enabled: false
+  output_dir: "outputs"
+  output_prefix: "cardiomyopathy_classifier"
+
+# Dataloader settings
+dataloader:
+  num_workers: 4
+  pin_memory: true
+  prefetch_factor: 2
+  group_by_length: false
+
+# Environment
+environment:
+  nproc: 1                        # Number of processes for data prep
+  seed: 42
+
