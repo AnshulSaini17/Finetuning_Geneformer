@@ -65,25 +65,37 @@ def evaluate_model(
     # Generate plots if requested
     if plot_results:
         print("\nGenerating visualizations...")
-        
-        # Confusion matrix
-        evaluator.plot_conf_mat(
-            conf_mat_dict=test_metrics,
-            output_directory=output_directory,
-            output_prefix=output_prefix,
-        )
-        print("  ✓ Confusion matrix saved")
-        
-        # Prediction plots
-        predictions_file = f"{output_directory}/{output_prefix}_ksplit1_predictions.pkl"
-        if os.path.exists(predictions_file):
-            evaluator.plot_predictions(
-                predictions_file=predictions_file,
-                id_class_dict_file=id_class_dict_file,
+
+        # 1) Confusion matrix (normalize + save PDF via Geneformer helper)
+        try:
+            # Geneformer expects a dict: {model_name: conf_mat_df}
+            conf_mat_dict = {"Geneformer": test_metrics["conf_matrix"]}
+            evaluator.plot_conf_mat(
+                conf_mat_dict=conf_mat_dict,
                 output_directory=output_directory,
                 output_prefix=output_prefix,
             )
-            print("  ✓ Prediction plots saved")
+            print("  ✓ Confusion matrix saved")
+        except Exception as e:
+            print(f"  ⚠️ Skipping confusion matrix plot (error: {e})")
+
+        # 2) Prediction heatmap (Geneformer-style plot_predictions)
+        # evaluate_saved_model saves: <output_prefix>_pred_dict.pkl when predict=True
+        predictions_file = os.path.join(output_directory, f"{output_prefix}_pred_dict.pkl")
+        if os.path.exists(predictions_file):
+            try:
+                evaluator.plot_predictions(
+                    predictions_file=predictions_file,
+                    id_class_dict_file=id_class_dict_file,
+                    title="cell_state",
+                    output_directory=output_directory,
+                    output_prefix=output_prefix,
+                )
+                print("  ✓ Prediction plots saved")
+            except Exception as e:
+                print(f"  ⚠️ Skipping prediction plots (error: {e})")
+        else:
+            print(f"  ⚠️ Prediction file not found: {predictions_file}")
     
     print("="*60 + "\n")
     

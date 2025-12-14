@@ -9,11 +9,11 @@ model:
 # Data settings
 data:
   dataset_file: "cell_type_train_data.dataset"  # Path to downloaded dataset
-  cell_state_key: "cell_type"                    # Column name for labels
+  cell_state_key: "disease"                    # Column name for labels
   cell_types:                                    # Cardiomyopathy classifications
-    - "Non-Failing"              # NF - Healthy
-    - "Hypertrophic Cardiomyopathy"  # HCM
-    - "Dilated Cardiomyopathy"       # DCM
+    - "nf"              # NF - Healthy
+    - "hcm"  # HCM
+    - "dcm"       # DCM
   max_cells: 50000               # Max number of cells to use
   train_test_split: 0.2          # Test set proportion
 
@@ -31,10 +31,10 @@ training:
   lr_scheduler: "linear"
   max_grad_norm: 1.0
   
-  # Mixed precision
-  fp16: false
-  bf16: true                      # Better for A100/T4 GPUs
-  tf32: true                      # Enable TF32 on Ampere GPUs
+  # Mixed precision (adjust based on your GPU)
+  fp16: false                     # Enable for T4/V100 GPUs
+  bf16: true                      # Enable for A100/RTX 30xx+ GPUs  
+  tf32: false                     # Enable for A100 GPUs only
 
 # Evaluation
 evaluation:
