@@ -1,10 +1,3 @@
-"""
-Helper script to use distilled model for fine-tuning
-
-This script helps you load and use your friend's distilled model (model_best.pt)
-instead of the full Geneformer 10M model.
-"""
-
 import torch
 from transformers import BertForSequenceClassification, BertConfig
 import os
@@ -14,7 +7,7 @@ def load_distilled_model(
     checkpoint_path,
     num_classes=3,
     vocab_size=25426,  # Same as V1
-    hidden_size=256,   # Ask your friend for these specs
+    hidden_size=256,
     num_hidden_layers=6,
     num_attention_heads=4,
     intermediate_size=1024
@@ -59,7 +52,6 @@ def load_distilled_model(
     else:
         raise ValueError("Unexpected checkpoint format")
     
-    # Print some keys to understand structure
     print(f"  Total keys: {len(state_dict)}")
     sample_keys = list(state_dict.keys())[:5]
     print(f"  Sample keys: {sample_keys}")

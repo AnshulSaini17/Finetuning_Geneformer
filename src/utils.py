@@ -1,6 +1,3 @@
-"""
-Utility functions
-"""
 
 import yaml
 import os

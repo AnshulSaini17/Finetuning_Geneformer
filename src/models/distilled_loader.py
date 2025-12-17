@@ -37,8 +37,6 @@ def load_distilled_model(
         raise FileNotFoundError(f"Model file not found: {model_path}")
     
     # Load checkpoint
-    # Note: Some checkpoints contain omegaconf objects; if loading fails, install omegaconf:
-    #   pip install omegaconf
     try:
         checkpoint = torch.load(model_path, map_location="cpu", weights_only=False)
     except ModuleNotFoundError as e:

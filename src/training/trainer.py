@@ -1,6 +1,3 @@
-"""
-Training utilities for Geneformer fine-tuning
-"""
 
 import os
 import pickle

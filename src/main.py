@@ -104,8 +104,8 @@ def main(args):
         output_prefix = f"{output_prefix}_distilled"
         print(f"✓ Using output prefix: {output_prefix} (for distilled model results)")
     
-    # Optional subject-level splits (to mirror geneformer-5.ipynb)
-    split_attr = data_config.get("split_attr")  # e.g., "individual"
+    # Optional subject-level splits
+    split_attr = data_config.get("split_attr") 
     train_ids = data_config.get("train_ids", [])
     eval_ids = data_config.get("eval_ids", [])
     test_ids = data_config.get("test_ids", [])
