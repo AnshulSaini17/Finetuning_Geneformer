@@ -47,10 +47,22 @@ bash setup.sh
 
 **Requirements:**
 - Python 3.10+
-- CUDA-capable GPU recommended (but works on CPU)
+- CUDA-capable GPU recommended (works on CPU but much slower)
 - 16GB+ RAM
 
 ## Usage
+
+### Option A: Fine-tune with Distilled/Pre-trained Model
+
+**Have a distilled model from a collaborator?** Use it directly:
+
+```bash
+python src/main.py --distilled-model path/to/model_best.pt --evaluate
+```
+
+See [DISTILLED_PIPELINE_GUIDE.md](DISTILLED_PIPELINE_GUIDE.md) for details.
+
+### Option B: Fine-tune Original Geneformer
 
 ### 1. Configure Training
 
@@ -58,17 +70,20 @@ Edit `configs/config.yaml`:
 
 ```yaml
 data:
-  dataset_file: "path/to/cell_type_train_data.dataset"
-  cell_types:
-    - "Cardiomyocyte1"  # or your specific labels
-    - "Cardiomyocyte2"
-    - "Cardiomyocyte3"
-  max_cells: 50000
+  dataset_file: "path/to/cell_type_train_data.dataset"  # Path to downloaded dataset
+  cell_state_key: "disease"                    # Column name for labels
+  cell_types:                                    # Cardiomyopathy classifications
+    - "nf"              # NF - Healthy
+    - "hcm"  # HCM
+    - "dcm"       # DCM
+  max_cells: None               # Max number of cells to use
+  train_test_split: 0.2          # Test set proportion
 
+# Training hyperparameters
 training:
-  num_epochs: 3
-  learning_rate: 5e-5
-  batch_size: 16  # Adjust based on GPU
+  num_epochs: 0.9                
+  learning_rate: 0.000804        
+  batch_size: 12    # Adjust based on GPU
 ```
 
 ### 2. Run Training
@@ -87,18 +102,20 @@ python src/main.py --config configs/my_config.yaml --data /path/to/dataset
 ### 3. Command Line Options
 
 ```
---config PATH       Configuration file (default: configs/config.yaml)
---data PATH         Dataset path (overrides config)
---output-dir PATH   Output directory (default: timestamped)
---evaluate          Run evaluation after training
---verbose           Show detailed logs
---skip-prepare      Skip data preparation (use existing)
+--config PATH           Configuration file (default: configs/config.yaml)
+--data PATH             Dataset path (overrides config)
+--distilled-model PATH  Path to distilled .pt model (e.g., model_best.pt)
+--output-dir PATH       Output directory (default: timestamped)
+--evaluate              Run evaluation after training
+--verbose               Show detailed logs
+--skip-prepare          Skip data preparation (use existing)
 ```
 
 ## Output
 
 Training results are saved to `outputs/<timestamp>/`:
 
+### Original Geneformer:
 ```
 outputs/20251128_120000/
 ├── ksplit1/                              # Trained model checkpoint
@@ -110,6 +127,17 @@ outputs/20251128_120000/
 └── cardiomyocyte_classifier_id_class_dict.pkl
 ```
 
+### Distilled Model:
+```
+outputs/20251128_120000/
+├── distilled_geneformer/                         # Converted model
+├── cardiomyocyte_classifier_distilled_*.dataset  # Training data (with _distilled suffix)
+├── cardiomyocyte_classifier_distilled_conf_mat.png
+└── cardiomyocyte_classifier_distilled_*.pkl
+```
+
+**Note:** Distilled model results use `_distilled` suffix to prevent overwriting original results.
+
 ## Model Details
 
 - **Base Model:** [Geneformer V1-10M](https://huggingface.co/ctheodoris/Geneformer)
@@ -120,11 +148,16 @@ outputs/20251128_120000/
 
 ## Training Time
 
+Automatically uses GPU if available (CPU fallback):
+
 | GPU | Batch Size | Time (50k cells, 3 epochs) |
 |-----|------------|----------------------------|
-| T4  | 16         | ~30-45 min                 |
+| A100| 32-64      | ~10-15 min                 |
 | V100| 32         | ~20-30 min                 |
-| A100| 64         | ~10-15 min                 |
+| T4  | 16         | ~30-45 min                 |
+| CPU | 4-8        | ~3-4 hours                 |
+
+**No GPU?** Use Google Colab (see section below).
 
 ## Key Features
 

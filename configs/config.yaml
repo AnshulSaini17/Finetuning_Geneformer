@@ -4,7 +4,7 @@
 model:
   name: "ctheodoris/Geneformer"
   version: "V1"  # V1 (10M) or V2 (104M/316M)
-  freeze_layers: 0  # Number of layers to freeze (0 = train all)
+  freeze_layers: 2  # Number of layers to freeze (0 = train all)
 
 # Data settings
 data:
@@ -14,23 +14,20 @@ data:
     - "nf"              # NF - Healthy
     - "hcm"  # HCM
     - "dcm"       # DCM
-  max_cells: 50000               # Max number of cells to use
+  max_cells: None               # Max number of cells to use
   train_test_split: 0.2          # Test set proportion
 
 # Training hyperparameters
 training:
-  num_epochs: 3
-  learning_rate: 5e-5
-  batch_size: 16                  # Per device batch size
+  num_epochs: 0.9                
+  learning_rate: 0.000804        
+  batch_size: 12                 
   gradient_accumulation_steps: 1
-  warmup_steps: 500
-  weight_decay: 0.001
-  
-  # Optimization
+  warmup_steps: 1812             
+  weight_decay: 0.258828         
   optimizer: "adamw"
-  lr_scheduler: "linear"
+  lr_scheduler: "polynomial"
   max_grad_norm: 1.0
-  
   # Mixed precision (adjust based on your GPU)
   fp16: false                     # Enable for T4/V100 GPUs
   bf16: true                      # Enable for A100/RTX 30xx+ GPUs  
@@ -42,7 +39,7 @@ evaluation:
   eval_steps: 1000
   save_strategy: "steps"
   save_steps: 1000
-  save_total_limit: 3
+  save_total_limit: 5
   load_best_model_at_end: true
   metric_for_best_model: "eval_loss"
 
