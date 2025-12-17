@@ -36,8 +36,8 @@ def load_distilled_model(
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model file not found: {model_path}")
     
-    # Load checkpoint
-    checkpoint = torch.load(model_path, map_location='cpu', weights_only=False)
+    # Load checkpoint; use weights_only to avoid needing training-time deps (e.g. omegaconf)
+    checkpoint = torch.load(model_path, map_location="cpu", weights_only=True)
     
     # Extract state dict
     if isinstance(checkpoint, dict):
