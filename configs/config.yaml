@@ -8,14 +8,64 @@ model:
 
 # Data settings
 data:
-  dataset_file: "cell_type_train_data.dataset"  # Path to downloaded dataset
+  dataset_file: "dataset.arrow"  # Path to downloaded dataset
   cell_state_key: "disease"                    # Column name for labels
   cell_types:                                    # Cardiomyopathy classifications
     - "nf"              # NF - Healthy
-    - "hcm"  # HCM
-    - "dcm"       # DCM
+    - "hcm"             # HCM
+    - "dcm"             # DCM
   max_cells: null               # Max number of cells to use
   train_test_split: 0.2          # Test set proportion
+  # Optional filtering to only cardiomyocytes (matches geneformer-5.ipynb)
+  filter_column: "cell_type"
+  filter_values:
+    - "Cardiomyocyte1"
+    - "Cardiomyocyte2"
+    - "Cardiomyocyte3"
+  # Optional subject-level splits (matches geneformer-5.ipynb)
+  split_attr: "individual"
+  train_ids:
+    - "1447"
+    - "1600"
+    - "1462"
+    - "1558"
+    - "1300"
+    - "1508"
+    - "1358"
+    - "1678"
+    - "1561"
+    - "1304"
+    - "1610"
+    - "1430"
+    - "1472"
+    - "1707"
+    - "1726"
+    - "1504"
+    - "1425"
+    - "1617"
+    - "1631"
+    - "1735"
+    - "1582"
+    - "1722"
+    - "1622"
+    - "1630"
+    - "1290"
+    - "1479"
+    - "1371"
+    - "1549"
+    - "1515"
+  eval_ids:
+    - "1422"
+    - "1510"
+    - "1539"
+    - "1606"
+    - "1702"
+  test_ids:
+    - "1437"
+    - "1516"
+    - "1602"
+    - "1685"
+    - "1718"
 
 # Training hyperparameters
 training:

@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from src.utils import load_config, setup_environment, print_config
 from src.data.dataset_loader import load_dataset, save_dataset_to_disk, analyze_dataset
 from src.models.classifier import create_classifier, get_training_args
+from src.models.distilled_loader import load_distilled_model, is_distilled_model_ready
 from src.training.trainer import prepare_training_data, train_model, get_output_directory
 from src.evaluation.evaluator import evaluate_model, print_metrics
 
@@ -26,6 +27,14 @@ def main(args):
     print("\n" + "="*80)
     print(" "*20 + "GENEFORMER FINE-TUNING")
     print("="*80 + "\n")
+    
+    # Simple GPU check
+    import torch
+    if torch.cuda.is_available():
+        print(f"✓ GPU detected: {torch.cuda.get_device_name(0)}")
+    else:
+        print("⚠️  No GPU detected - using CPU (training will be slower)")
+    print()
     
     # Load configuration
     config = load_config(args.config)
@@ -48,6 +57,13 @@ def main(args):
     cell_types = data_config.get("cell_types", [])
     max_cells = data_config.get("max_cells", 50000)
     state_key = data_config.get("cell_state_key", "cell_type")
+
+    # Optional filtering (e.g., only cardiomyocytes)
+    filter_column = data_config.get("filter_column")
+    filter_values = data_config.get("filter_values", [])
+    filter_data = None
+    if filter_column and filter_values:
+        filter_data = {filter_column: filter_values}
     
     output_prefix = logging_config.get("output_prefix", "classifier")
     base_output_dir = logging_config.get("output_dir", "outputs")
@@ -68,6 +84,46 @@ def main(args):
     dataset_dir = os.path.join(output_dir, "dataset_temp")
     save_dataset_to_disk(dataset, dataset_dir)
     
+    # Step 2.5: Load distilled model if provided
+    if args.distilled_model:
+        print("\nStep 2.5/5: Loading distilled model")
+        distilled_model_dir = os.path.join(output_dir, "distilled_geneformer")
+        
+        # Check if already converted
+        if is_distilled_model_ready(distilled_model_dir):
+            print(f"✓ Distilled model already loaded at: {distilled_model_dir}")
+            model_name = distilled_model_dir
+        else:
+            # Convert .pt to HuggingFace format
+            model_name = load_distilled_model(
+                model_path=args.distilled_model,
+                output_dir=distilled_model_dir
+            )
+        
+        # Update output prefix to differentiate distilled model results
+        output_prefix = f"{output_prefix}_distilled"
+        print(f"✓ Using output prefix: {output_prefix} (for distilled model results)")
+    
+    # Optional subject-level splits (to mirror geneformer-5.ipynb)
+    split_attr = data_config.get("split_attr")  # e.g., "individual"
+    train_ids = data_config.get("train_ids", [])
+    eval_ids = data_config.get("eval_ids", [])
+    test_ids = data_config.get("test_ids", [])
+
+    train_test_split_dict = None
+    train_valid_split_dict = None
+    if split_attr and train_ids and eval_ids and test_ids:
+        train_test_split_dict = {
+            "attr_key": split_attr,
+            "train": train_ids + eval_ids,
+            "test": test_ids,
+        }
+        train_valid_split_dict = {
+            "attr_key": split_attr,
+            "train": train_ids,
+            "eval": eval_ids,
+        }
+
     # Step 3: Initialize classifier
     print("\nStep 3/5: Initializing classifier")
     training_args = get_training_args(config, output_dir)
@@ -78,7 +134,8 @@ def main(args):
         max_cells=max_cells,
         freeze_layers=freeze_layers,
         model_version=model_version,
-        state_key=state_key
+        state_key=state_key,
+        filter_data=filter_data,
     )
     
     # Step 4: Prepare training data
@@ -88,7 +145,8 @@ def main(args):
             classifier=classifier,
             dataset_dir=dataset_dir,
             output_dir=output_dir,
-            output_prefix=output_prefix
+            output_prefix=output_prefix,
+            split_id_dict=train_test_split_dict,
         )
     else:
         print("\nStep 4/5: Skipping data preparation (using existing)")
@@ -101,7 +159,8 @@ def main(args):
             model_directory=model_name,
             prepared_data_dir=output_dir,
             output_prefix=output_prefix,
-            output_dir=output_dir
+            output_dir=output_dir,
+            split_id_dict=train_valid_split_dict,
         )
         
         print(f"Training metrics: {metrics}")
@@ -113,9 +172,19 @@ def main(args):
         print("\nEvaluating model...")
         test_data_file = f"{output_dir}/{output_prefix}_labeled_test.dataset"
         id_class_dict_file = f"{output_dir}/{output_prefix}_id_class_dict.pkl"
-        model_checkpoint = f"{output_dir}/ksplit1"
-        
-        if os.path.exists(model_checkpoint):
+
+        # Geneformer validate() saves models under:
+        # <output_dir>/<YYMMDD>_geneformer_cellClassifier_<output_prefix>/ksplit1
+        model_checkpoint = None
+        for name in sorted(os.listdir(output_dir)):
+            if f"geneformer_cellClassifier_{output_prefix}" in name:
+                candidate = os.path.join(output_dir, name, "ksplit1")
+                if os.path.isdir(candidate):
+                    model_checkpoint = candidate
+                    break
+
+        if model_checkpoint and os.path.exists(model_checkpoint):
+            print(f"Using model checkpoint: {model_checkpoint}")
             test_metrics = evaluate_model(
                 model_directory=model_checkpoint,
                 id_class_dict_file=id_class_dict_file,
@@ -125,10 +194,10 @@ def main(args):
                 model_version=model_version,
                 plot_results=True
             )
-            
             print_metrics(test_metrics)
         else:
-            print(f"⚠️  Model checkpoint not found at {model_checkpoint}")
+            print("⚠️  Could not find trained model checkpoint for evaluation.")
+            print(f"    Looked for '*geneformer_cellClassifier_{output_prefix}/ksplit1' under {output_dir}")
     
     print("\n" + "="*80)
     print(f"✓ Complete! Results saved to: {output_dir}")
@@ -151,6 +220,12 @@ if __name__ == "__main__":
         "--data",
         type=str,
         help="Path to dataset file (overrides config)"
+    )
+    
+    parser.add_argument(
+        "--distilled-model",
+        type=str,
+        help="Path to distilled model .pt file (e.g., model_best.pt)"
     )
     
     parser.add_argument(

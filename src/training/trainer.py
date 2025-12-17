@@ -12,7 +12,8 @@ def prepare_training_data(
     classifier: Classifier,
     dataset_dir: str,
     output_dir: str,
-    output_prefix: str
+    output_prefix: str,
+    split_id_dict: Optional[Dict] = None,
 ) -> str:
     """
     Prepare dataset for training
@@ -32,11 +33,15 @@ def prepare_training_data(
     
     os.makedirs(output_dir, exist_ok=True)
     
-    classifier.prepare_data(
-        input_data_file=dataset_dir,
-        output_directory=output_dir,
-        output_prefix=output_prefix,
-    )
+    prepare_kwargs = {
+        "input_data_file": dataset_dir,
+        "output_directory": output_dir,
+        "output_prefix": output_prefix,
+    }
+    if split_id_dict is not None:
+        prepare_kwargs["split_id_dict"] = split_id_dict
+
+    classifier.prepare_data(**prepare_kwargs)
     
     # Verify prepared data
     id_class_dict_file = f"{output_dir}/{output_prefix}_id_class_dict.pkl"
@@ -62,7 +67,8 @@ def train_model(
     model_directory: str,
     prepared_data_dir: str,
     output_prefix: str,
-    output_dir: str
+    output_dir: str,
+    split_id_dict: Optional[Dict] = None,
 ) -> Dict:
     """
     Train the Geneformer classifier
@@ -88,13 +94,17 @@ def train_model(
     print(f"Training data: {train_data_file}")
     print(f"Starting training...\n")
     
-    metrics = classifier.validate(
-        model_directory=model_directory,
-        prepared_input_data_file=train_data_file,
-        id_class_dict_file=id_class_dict_file,
-        output_directory=output_dir,
-        output_prefix=output_prefix,
-    )
+    validate_kwargs = {
+        "model_directory": model_directory,
+        "prepared_input_data_file": train_data_file,
+        "id_class_dict_file": id_class_dict_file,
+        "output_directory": output_dir,
+        "output_prefix": output_prefix,
+    }
+    if split_id_dict is not None:
+        validate_kwargs["split_id_dict"] = split_id_dict
+
+    metrics = classifier.validate(**validate_kwargs)
     
     print("\n✓ Training complete")
     print("="*60 + "\n")

@@ -14,7 +14,8 @@ def create_classifier(
     max_cells: int = 50000,
     freeze_layers: int = 0,
     model_version: str = "V1",
-    state_key: str = "cell_type"
+    state_key: str = "cell_type",
+    filter_data: Optional[Dict] = None,
 ) -> Classifier:
     """
     Initialize Geneformer classifier
@@ -43,15 +44,20 @@ def create_classifier(
         "states": cell_types
     }
     
-    classifier = Classifier(
-        classifier="cell",
-        cell_state_dict=cell_state_dict,
-        training_args=training_config,
-        max_ncells=max_cells,
-        freeze_layers=freeze_layers,
-        model_version=model_version,
-        nproc=1,
-    )
+    classifier_kwargs = {
+        "classifier": "cell",
+        "cell_state_dict": cell_state_dict,
+        "training_args": training_config,
+        "max_ncells": max_cells,
+        "freeze_layers": freeze_layers,
+        "model_version": model_version,
+        "nproc": 1,
+    }
+
+    if filter_data:
+        classifier_kwargs["filter_data"] = filter_data
+
+    classifier = Classifier(**classifier_kwargs)
     
     print("✓ Classifier initialized")
     print(f"  - Model version: {model_version}")
