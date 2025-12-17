@@ -34,8 +34,8 @@ Or download manually from the [HuggingFace dataset page](https://huggingface.co/
 
 ```bash
 # Clone repository
-git clone https://github.com/AnshulSaini17/Geneformer_finetuning.git
-cd Geneformer_finetuning
+git clone https://github.com/AnshulSaini17/Finetuning_Geneformer.git
+cd Finetuning_Geneformer
 
 # Create virtual environment
 python3 -m venv venv
@@ -59,8 +59,6 @@ bash setup.sh
 ```bash
 python src/main.py --distilled-model path/to/model_best.pt --evaluate
 ```
-
-See [DISTILLED_PIPELINE_GUIDE.md](DISTILLED_PIPELINE_GUIDE.md) for details.
 
 ### Option B: Fine-tune Original Geneformer
 
@@ -173,8 +171,8 @@ Automatically uses GPU if available (CPU fallback):
 If you don't have a GPU, use Google Colab:
 
 ```python
-!git clone https://github.com/AnshulSaini17/Geneformer_finetuning.git
-%cd Geneformer_finetuning
+!git clone https://github.com/AnshulSaini17/Finetuning_Geneformer.git
+%cd Finetuning_Geneformer
 !bash setup.sh
 ```
 

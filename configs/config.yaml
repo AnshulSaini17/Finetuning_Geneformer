@@ -14,7 +14,7 @@ data:
     - "nf"              # NF - Healthy
     - "hcm"  # HCM
     - "dcm"       # DCM
-  max_cells: None               # Max number of cells to use
+  max_cells: null               # Max number of cells to use
   train_test_split: 0.2          # Test set proportion
 
 # Training hyperparameters
